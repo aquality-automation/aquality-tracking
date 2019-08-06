@@ -1,0 +1,56 @@
+version: '3.1'
+
+services:
+  db:
+    image: mysql:5.7
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - TZ=UTC
+    ports:
+      - ${DB_PORT}:3306
+
+  backup:
+    depends_on:
+      - db
+    image: deitch/mysql-backup
+    restart: always
+    volumes:
+     - ./db_backup:/db
+    environment:
+     - DB_DUMP_TARGET=/db
+     - DB_USER=root
+     - DB_PASS=${DB_PASSWORD}
+     - DB_DUMP_FREQ=1440
+     - DB_DUMP_BEGIN=2330
+     - DB_SERVER=db
+
+  tomcat:
+    depends_on: 
+      - db
+    image: tomcat:9.0-jre8-alpine
+    restart: always
+    volumes:
+      - ./apps:/usr/local/tomcat/webapps/
+    links:
+      - db:database
+    ports:
+      - ${TOMCAT_PORT}:8080
+
+  update:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BRANCH: ${BRANCH:-master}
+        DB_USER: root
+        DB_PASS: ${DB_PASSWORD}
+    environment:
+        BRANCH: ${BRANCH:-master}
+        DB_USER: root
+        DB_PASS: ${DB_PASSWORD}
+    volumes: 
+      - ./apps:/app/webapps
+    depends_on:
+      - tomcat

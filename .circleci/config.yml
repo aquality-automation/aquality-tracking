@@ -1,0 +1,48 @@
+
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:10.15.3
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: Install docker-compose
+          command: |
+            set -x
+            curl -L https://github.com/docker/compose/releases/download/1.18.0/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
+            chmod +x ~/docker-compose
+            sudo mv ~/docker-compose /usr/local/bin/docker-compose
+
+      - run:
+          name: Start docker-compose
+          command:  |
+            set -x
+            docker-compose build --build-arg BRANCH=${CIRCLE_BRANCH} update
+            docker-compose up -d
+            docker run --network container:repo_tomcat_1 \
+              appropriate/curl --retry 10 --retry-delay 60 --retry-connrefused http://tomcat:8080/api/authInfo
+          
+      - run:
+          name: Run tests
+          command: |
+            cd test
+            docker build . -t tests --build-arg FRONTBRANCH=${CIRCLE_BRANCH}
+            docker run --network container:repo_tomcat_1 \
+              tests
+
+workflows:
+  version: 2
+  main:
+    jobs:
+    - build:
+        filters:
+          branches:
+            only:
+              - develop
+              - master
