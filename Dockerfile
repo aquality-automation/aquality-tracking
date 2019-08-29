@@ -1,15 +1,4 @@
 FROM alpine/git as clone
-RUN apk update && \
-    apk add --update git && \
-    apk add --update openssh
-
-# Make ssh dir and add key
-RUN mkdir /root/.ssh/
-ADD /ssh/id_rsa /root/.ssh/id_rsa
-
-# Create known_hosts
-RUN chmod -R 600 /root/.ssh/ && \
-    ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 
 # Define branch
 ARG BRANCH 
@@ -17,9 +6,9 @@ ENV BRANCH=${BRANCH}
 
 # Clone repos
 WORKDIR /app
-RUN git clone git@github.com:aquality-automation/aquality-tracking-api.git
+RUN git clone https://github.com/aquality-automation/aquality-tracking-api.git
 RUN cd aquality-tracking-api && git fetch origin && git checkout ${BRANCH} || git checkout -b ${BRANCH} origin/${BRANCH}
-RUN git clone git@github.com:aquality-automation/aquality-tracking-ui.git
+RUN git clone https://github.com/aquality-automation/aquality-tracking-ui.git
 RUN cd aquality-tracking-ui && git fetch origin && git checkout ${BRANCH} || git checkout -b ${BRANCH} origin/${BRANCH}
 
 FROM maven:3.5-jdk-8-alpine as build-back
