@@ -8,9 +8,8 @@ ENV BRANCH=${BRANCH}
 WORKDIR /app
 RUN git clone https://github.com/aquality-automation/aquality-tracking-api.git
 RUN cd aquality-tracking-api && git fetch origin && git checkout ${BRANCH} || git checkout -b ${BRANCH} origin/${BRANCH}
-RUN git clone https://github.com/aquality-automation/aquality-tracking-ui.git
-RUN cd aquality-tracking-ui && git fetch origin && git checkout ${BRANCH} || git checkout -b ${BRANCH} origin/${BRANCH}
 
+# Build backend
 FROM maven:3.5-jdk-8-alpine as build-back
 COPY --from=clone /app/aquality-tracking-api /app
 WORKDIR /app
@@ -20,13 +19,16 @@ ARG DB_PORT=3306
 ARG DB_PASS
 RUN mvn package -f pom.xml  -P !run-migration -Ddb.username="$DB_USER" -Ddb.password="$DB_PASS" -Ddb.host="$DB_HOST" -Ddb.publicPort="$DB_PORT" -Ddb.port="$DB_PORT" -Ddb.publicHost="$DB_HOST"
 
-FROM node:10-alpine as build-front
+# Download and unpack frontend
+FROM ubuntu:latest as build-front
 WORKDIR /app
-COPY --from=clone /app/aquality-tracking-ui /app
-RUN apk add --no-cache git
-RUN npm i
-RUN npm run build:prod
+RUN apt-get update && apt-get -y install curl && apt-get -y install wget
+RUN wget --version
+RUN curl -s https://api.github.com/repos/aquality-automation/aquality-tracking-ui/releases/latest | grep "browser_download_url.*zip" | cut -d : -f 2,3 | tr -d '"' | wget -qi -
+RUN apt-get install unzip
+RUN unzip dist.zip
 
+# Grab all results copy to tomcat and run migration for DB 
 FROM maven:3.5-jdk-8-alpine as results
 WORKDIR /result/back
 COPY --from=build-back /app /result/back/
