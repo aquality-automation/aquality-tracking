@@ -9,7 +9,7 @@ The latest version of Aquality Tracking will be started.
 
 If you need to update Aquality Tracking to the latest version just click **update.sh** (or **update.bat**).
 
-If you need to stop Aquality Tracking just click **update.sh** (or **update.bat**).
+If you need to stop Aquality Tracking just click **stop.sh** (or **stop.bat**).
 
 ## System structure
 ![ProjectStructure](ProjectStructure.png)
