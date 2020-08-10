@@ -3,7 +3,7 @@ name: Feature request
 about: Suggest an idea for this project
 title: "[NF]"
 labels: enhancement
-assignees: VladislavKostyukevich
+assignees: DmitryBogatko
 
 ---
 
