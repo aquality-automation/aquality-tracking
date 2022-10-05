@@ -35,3 +35,10 @@ The **update.sh** (or **update.bat**) stopping all services, re-build the Update
 2. CPU: 2 CPU 1Ghz
 3. RAM: 2048 MB
 4. Hard Disk: 10 GB
+
+### Documentation
+For more information, please refer to the documentation:
+- [In English](https://github.com/aquality-automation/aquality-tracking/wiki)
+
+### License
+Library's source code is made available under the [Apache 2.0 license](LICENSE).
