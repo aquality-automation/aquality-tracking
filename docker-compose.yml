@@ -16,6 +16,7 @@ services:
       - db
     image: deitch/mysql-backup
     restart: always
+    user: "0"
     volumes:
      - ./db_backup:/db
     environment:
