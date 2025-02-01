@@ -35,6 +35,8 @@ services:
     command: bash -c "apk add --update ttf-dejavu && rm -rf /var/cache/apk/* && catalina.sh run"
     volumes:
       - ./apps:/usr/local/tomcat/webapps/
+      - tomcat_test_result_attachments:/usr/local/tomcat/project
+      - tomcat_audit_attachments:/usr/local/tomcat/audits
     links:
       - db:database
     ports:
@@ -56,3 +58,7 @@ services:
       - ./apps:/app/webapps
     depends_on:
       - tomcat
+
+volumes:
+  tomcat_test_result_attachments:
+  tomcat_audit_attachments:
