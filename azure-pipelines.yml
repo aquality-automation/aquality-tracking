@@ -1,19 +1,40 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- dev-azure-pipeline
+  - master
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+jobs:
+  - job: test
+    displayName: "Run tests"
+    services:
+      docker: 
+        image: docker:20.10.7-dind
+        options: --privileged
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    steps:
+      - checkout: self
+
+      - script: |
+          set -x
+          curl -L https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-`uname -s`-`uname -m` > docker-compose
+          chmod +x docker-compose
+          sudo mv docker-compose /usr/local/bin/docker-compose
+        displayName: "Install Docker Compose"
+
+      - script: |
+          set -x
+          docker-compose build --build-arg BRANCH=$(Build.SourceBranchName) update
+          docker-compose up -d
+
+          TOMCAT_CONTAINER=$(docker ps --filter "name=-tomcat-1" --format "{{.Names}}" | head -n 1)
+          
+          if [ -z "$TOMCAT_CONTAINER" ]; then
+            echo "❌ No running tomcat container found!"
+            docker ps
+            exit 1
+          fi
+
+          docker run --network container:$TOMCAT_CONTAINER \
+            appropriate/curl -4 --retry 10 --retry-delay 60 --retry-connrefused http://tomcat:8080/api/authInfo
+        displayName: "Start Aquality Tracking and Run Health Check"
