@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/aquality-automation/aquality-automation/_apis/build/status%2Faquality-automation.aquality-tracking?branchName=master)](https://dev.azure.com/aquality-automation/aquality-automation/_build/latest?definitionId=17&branchName=master)
+
 # Aquality Tracking
 Here is you can find  docker compose that will start your **Aquality Tracking**.
 **Before we start, make sure you have [docker](https://www.docker.com) installed.**
