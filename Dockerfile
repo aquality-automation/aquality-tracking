@@ -1,4 +1,4 @@
-FROM alpine/git as clone
+FROM eclipse-temurin:8-jdk as clone
 
 # Define branch
 ARG BRANCH 
@@ -6,11 +6,12 @@ ENV BRANCH=${BRANCH}
 
 # Clone repos
 WORKDIR /app
+RUN apt-get update && apt-get install -y git
 RUN git clone https://github.com/aquality-automation/aquality-tracking-api.git
 RUN cd aquality-tracking-api && git fetch origin && git checkout ${BRANCH} || git checkout -b ${BRANCH} origin/${BRANCH}
 
 # Build backend
-FROM maven:3.5-jdk-8-alpine as build-back
+FROM maven:3.9.6-eclipse-temurin-8 as build-back
 COPY --from=clone /app/aquality-tracking-api /app
 WORKDIR /app
 ARG DB_USER=root
@@ -22,14 +23,14 @@ RUN mvn package -f pom.xml  -P !run-migration -Ddb.username="$DB_USER" -Ddb.pass
 # Download and unpack frontend
 FROM ubuntu:latest as build-front
 WORKDIR /app
-RUN apt-get update && apt-get -y install curl && apt-get -y install wget
+RUN apt-get update && apt-get -y install curl wget unzip
 RUN wget --version
 RUN curl -s https://api.github.com/repos/aquality-automation/aquality-tracking-ui/releases/latest | grep "browser_download_url.*zip" | cut -d : -f 2,3 | tr -d '"' | wget -qi -
 RUN apt-get install unzip
 RUN unzip dist.zip
 
 # Grab all results copy to tomcat and run migration for DB 
-FROM maven:3.5-jdk-8-alpine as results
+FROM maven:3.9.6-eclipse-temurin-8 as results
 WORKDIR /result/back
 COPY --from=build-back /app /result/back/
 COPY --from=build-back /app/target/api.war /result/webapps/
